@@ -9,6 +9,18 @@ services:
     networks:
       - toll-net
   
+  calculator:
+    container_name: calculator
+    build:
+      dockerfile: Dockerfile.calculator
+    depends_on:
+      receiver:
+        condition: service_started
+      broker:
+        condition: service_healthy
+    networks:
+      - toll-net
+  
   obu:
     container_name: obu
     build:

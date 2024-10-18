@@ -1,6 +1,7 @@
 package obu
 
 import (
+	"fmt"
 	"math"
 	"math/rand/v2"
 	"time"
@@ -15,6 +16,10 @@ type OBUData struct {
 	OBUID int     `json:"obuid"`
 	Lat   float64 `json:"lat"`
 	Long  float64 `json:"long"`
+}
+
+func (data *OBUData) String() string {
+	return fmt.Sprintf("[%d]<lat %.2f :: long %.2f>", data.OBUID, data.Lat, data.Long)
 }
 
 func GenLocation() (float64, float64) {

@@ -2,11 +2,12 @@ package receiver
 
 import (
 	"context"
-	"encoding/json"
 	"log"
+	"log/slog"
 	"net/http"
-	"time"
+	"os"
 
+	"github.com/SpectralJager/tollchecker/config"
 	"github.com/SpectralJager/tollchecker/obu"
 	"github.com/gorilla/websocket"
 	"github.com/segmentio/kafka-go"
@@ -16,40 +17,25 @@ const (
 	READ_BUFFER_SIZE   = 1024
 	WRITE_BUFFER_SIZE  = 1024
 	RECEIVER_CHAN_SIZE = 128
-	OBU_TOPIC          = "obu_topic"
-	PARTITION          = 0
 )
 
 type DataReceiver struct {
 	msgch chan obu.OBUData
 	conn  *websocket.Conn
 	prod  *kafka.Conn
+	lg    *slog.Logger
 }
 
 func NewDataReceiver() DataReceiver {
-	conn, err := kafka.DialLeader(context.Background(), "tcp", "broker:9092", OBU_TOPIC, PARTITION)
+	conn, err := kafka.DialLeader(context.Background(), "tcp", config.KAFKA_URL, config.OBU_TOPIC, config.OBU_PARTITION)
 	if err != nil {
 		log.Fatal("failed to dial leader:", err)
 	}
 	return DataReceiver{
 		msgch: make(chan obu.OBUData, RECEIVER_CHAN_SIZE),
 		prod:  conn,
+		lg:    slog.New(slog.NewTextHandler(os.Stdout, nil)),
 	}
-}
-
-func ProduceData(dr *DataReceiver, data obu.OBUData) error {
-	b, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-	err = dr.prod.SetWriteDeadline(time.Now().Add(10 * time.Second))
-	if err != nil {
-		return err
-	}
-	_, err = dr.prod.WriteMessages(
-		kafka.Message{Value: b},
-	)
-	return err
 }
 
 func WSHandler(dr *DataReceiver) http.HandlerFunc {
@@ -68,16 +54,17 @@ func WSHandler(dr *DataReceiver) http.HandlerFunc {
 }
 
 func WSReceiveLoop(dr *DataReceiver) {
-	log.Println("obu client connected")
+	dr.lg.Info("obu client connected")
+	producer := ProduceDataWithLogging(dr.lg)
 	for {
 		var data obu.OBUData
 		if err := dr.conn.ReadJSON(&data); err != nil {
-			log.Printf("read error: %e", err)
+			dr.lg.Error("read error", "error", err)
 			continue
 		}
-		log.Printf("received obu data [%d]<lat %.2f :: long %.2f>", data.OBUID, data.Lat, data.Long)
-		if err := ProduceData(dr, data); err != nil {
-			log.Printf("kafka produce error: %e", err)
+		dr.lg.Info("received obu data", "data", data.String())
+		if err := producer(dr.prod, data); err != nil {
+			dr.lg.Error("kafka produce error", "error", err)
 		}
 	}
 }

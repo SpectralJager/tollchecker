@@ -26,7 +26,8 @@ func main() {
 			if err := conn.WriteJSON(data); err != nil {
 				log.Fatal(err)
 			}
+			time.Sleep(time.Second)
 		}
-		time.Sleep(obu.SendInterval)
+		// time.Sleep(obu.SendInterval)
 	}
 }
