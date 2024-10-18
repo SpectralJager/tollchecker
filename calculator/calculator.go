@@ -44,7 +44,7 @@ func ConsumeLoop(conn *kafka.Conn) {
 		if prev.OBUID == 0 {
 			prev = data
 		}
-		distance, err := CalculcateDistance(prev, data)
+		distance, err := CalculateDistance(prev, data)
 		if err != nil {
 			log.Println("failed to calculate distance:", err)
 			continue
@@ -54,7 +54,7 @@ func ConsumeLoop(conn *kafka.Conn) {
 	}
 }
 
-func CalculcateDistance(d1, d2 obu.OBUData) (float64, error) {
+func CalculateDistance(d1, d2 obu.OBUData) (float64, error) {
 	res := math.Sqrt(math.Pow(d2.Lat-d1.Lat, 2) + math.Pow(d2.Long-d1.Long, 2))
 	return res, nil
 }
