@@ -55,6 +55,6 @@ func ConsumeLoop(conn *kafka.Conn) {
 }
 
 func CalculcateDistance(d1, d2 obu.OBUData) (float64, error) {
-	res := math.Sqrt(math.Pow(d2.Lat-d1.Lat, 2) + math.Pow(d2.Long-d2.Long, 2))
+	res := math.Sqrt(math.Pow(d2.Lat-d1.Lat, 2) + math.Pow(d2.Long-d1.Long, 2))
 	return res, nil
 }
