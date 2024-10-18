@@ -8,7 +8,7 @@ import (
 
 const (
 	SendInterval = time.Second * 60
-	WSEndpoint   = "ws://127.0.0.1:30000/ws"
+	WSEndpoint   = "ws://receiver:30000/ws"
 )
 
 type OBUData struct {

@@ -1,12 +1,7 @@
-FROM golang:latest AS build
+FROM golang:alpine AS build
 WORKDIR /build
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=1 go build cmd/receiver/main.go
-
-# Running stage
-FROM alpine
-WORKDIR /build
-COPY --from=build /build/main /build/main
+RUN go build cmd/receiver/main.go
 CMD [ "./main" ]
