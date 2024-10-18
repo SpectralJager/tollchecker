@@ -1,0 +1,7 @@
+FROM golang:alpine AS build
+WORKDIR /build
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN go build cmd/invoicer/main.go
+CMD [ "./main" ]

@@ -9,6 +9,16 @@ services:
     networks:
       - toll-net
   
+  invoicer:
+    container_name: invoicer
+    build:
+      dockerfile: Dockerfile.invoicer
+    depends_on:
+      calculator:
+        condition: service_started
+    networks:
+      - toll-net
+
   calculator:
     container_name: calculator
     build:

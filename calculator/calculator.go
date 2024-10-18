@@ -5,11 +5,18 @@ import (
 	"encoding/json"
 	"log"
 	"math"
+	"time"
 
 	"github.com/SpectralJager/tollchecker/config"
 	"github.com/SpectralJager/tollchecker/obu"
 	"github.com/segmentio/kafka-go"
 )
+
+type Distance struct {
+	Value float64 `json:"value"`
+	OBUID int     `json:"obuid"`
+	Unix  int64   `json:"unix"`
+}
 
 func OBUConsumer() {
 	TopicConsumer(config.OBU_TOPIC, config.OBU_PARTITION)
@@ -49,12 +56,16 @@ func ConsumeLoop(conn *kafka.Conn) {
 			log.Println("failed to calculate distance:", err)
 			continue
 		}
-		log.Printf("calculated distance: %.2f", distance)
+		log.Printf("calculated distance: %.2f", distance.Value)
 
 	}
 }
 
-func CalculateDistance(d1, d2 obu.OBUData) (float64, error) {
+func CalculateDistance(d1, d2 obu.OBUData) (Distance, error) {
 	res := math.Sqrt(math.Pow(d2.Lat-d1.Lat, 2) + math.Pow(d2.Long-d1.Long, 2))
-	return res, nil
+	return Distance{
+		Value: res,
+		OBUID: d2.OBUID,
+		Unix:  time.Now().Unix(),
+	}, nil
 }
